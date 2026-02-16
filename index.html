@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Olla Gitana: El Juego</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        .font-game { font-family: 'Luckiest Guy', cursive; }
+        body { touch-action: none; overscroll-behavior: none; }
+    </style>
+</head>
+<body class="overflow-hidden select-none h-screen w-screen relative font-sans text-gray-900">
+
+    <!-- Game Canvas -->
+    <canvas id="gameCanvas" class="block absolute top-0 left-0 w-full h-full z-0"></canvas>
+
+    <!-- HUD -->
+    <div id="hud" class="absolute top-0 left-0 w-full p-4 z-10 hidden flex justify-between items-start pointer-events-none">
+        <div class="bg-orange-100/90 backdrop-blur-sm rounded-lg px-3 py-1 shadow-lg border-2 border-orange-600 pointer-events-auto cursor-pointer hover:scale-105 transition-transform">
+            <span class="text-2xl drop-shadow-sm">❤️</span> <span id="livesDisplay" class="font-bold text-xl text-red-700 drop-shadow-sm">3</span>
+        </div>
+        
+        <div class="flex flex-col items-center pointer-events-auto cursor-pointer hover:scale-105 transition-transform">
+            <div class="bg-yellow-100/90 backdrop-blur-sm rounded-lg px-4 py-1 shadow-lg border-2 border-yellow-600 mb-1">
+                <span class="font-game text-yellow-800 text-lg uppercase tracking-wider drop-shadow-sm">Nivel</span> <span id="levelDisplay" class="font-bold text-xl text-yellow-900">1</span>
+            </div>
+            <!-- Level Up Notification -->
+            <div id="levelUpMsg" class="hidden fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+                <div class="bg-gradient-to-br from-yellow-400 to-orange-500 text-red-900 px-12 py-8 rounded-3xl border-8 border-red-700 shadow-[0_0_50px_rgba(255,165,0,0.8)] transform scale-0 transition-all duration-300 origin-center text-center">
+                    <h2 class="font-game text-6xl md:text-8xl drop-shadow-[0_5px_0_rgba(255,255,255,0.5)] mb-2 animate-bounce">¡SUBIDÓN!</h2>
+                    <p class="text-2xl font-bold uppercase tracking-widest text-white drop-shadow-md">Nivel <span id="newLevelNum">2</span></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex items-center">
+            <div class="bg-green-100/90 backdrop-blur-sm rounded-lg px-3 py-1 shadow-lg border-2 border-green-600 pointer-events-auto cursor-pointer hover:scale-105 transition-transform mr-2">
+                <span class="text-xl drop-shadow-sm">🍲</span> <span id="scoreDisplay" class="font-bold text-xl text-green-900 drop-shadow-sm">0</span>
+            </div>
+            <!-- HUD Music Toggle -->
+            <button id="musicToggle" class="pointer-events-auto bg-gray-800/90 text-white rounded-full w-10 h-10 flex items-center justify-center border-2 border-gray-500 hover:bg-gray-700 transition-colors shadow-lg">
+                🔇
+            </button>
+        </div>
+    </div>
+
+    <!-- Start Screen -->
+    <div id="startScreen" class="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm p-6 text-center shadow-inner">
+        <h1 class="font-game text-6xl md:text-8xl text-yellow-400 drop-shadow-[0_5px_0_rgba(180,83,9,1)] mb-4 transform -rotate-3 tracking-wider">OLLA GITANA</h1>
+        <h2 class="font-game text-4xl md:text-6xl text-white drop-shadow-[0_3px_0_rgba(0,0,0,0.8)] mb-10 transform rotate-2">EL JUEGO 🥘</h2>
+        
+        <div class="bg-orange-100/90 p-6 rounded-xl shadow-[0_10px_20px_rgba(0,0,0,0.5)] border-4 border-orange-600 max-w-sm w-full mb-10 transform -rotate-1">
+            <p class="text-orange-900 mb-4 font-bold text-xl uppercase border-b-2 border-orange-300 pb-2">Instrucciones pa' zagales</p>
+            
+            <div class="flex justify-center space-x-2 mb-2 text-3xl drop-shadow-sm filter drop-shadow-lg">
+                <span>🎃</span><span>🍐</span><span>🌿</span><span>🧆</span><span>🌶️</span>
+            </div>
+            <p class="text-sm text-gray-800 mb-3 font-bold">Pilla lo bueno (+10 pts)</p>
+            
+            <div class="flex justify-center mb-1">
+                <span class="text-3xl drop-shadow-lg animate-pulse">❤️</span>
+            </div>
+            <p class="text-sm text-red-600 mb-3 font-bold">¡Corazón = Vida Extra!</p>
+
+            <div class="flex justify-center space-x-2 mb-2 text-3xl opacity-90">
+                <span>💊</span><span>💉</span><span>🚬</span><span>💀</span>
+            </div>
+            <p class="text-sm text-red-700 font-extrabold mb-1 uppercase tracking-tight bg-red-100 px-2 py-1 rounded inline-block">¡Ni toques la mierda!</p>
+            <p class="text-xs text-orange-800/80 italic font-bold">(-1 vida)</p>
+        </div>
+
+        <!-- Difficulty Selection -->
+        <div class="flex flex-col gap-4 mb-6 w-full max-w-sm px-6 z-30 font-game text-3xl">
+            <button id="btnEasy" class="w-full bg-gradient-to-b from-green-400 to-green-600 border-4 border-white rounded-full py-4 shadow-[0_6px_0_#15803d] hover:translate-y-1 active:shadow-[0_2px_0_#15803d] transition-all transform hover:scale-105 uppercase tracking-wide text-white">
+                FÁCIL 🐢
+            </button>
+            <button id="btnNormal" class="w-full bg-gradient-to-b from-blue-400 to-blue-600 border-4 border-white rounded-full py-4 shadow-[0_6px_0_#1d4ed8] hover:translate-y-1 active:shadow-[0_2px_0_#1d4ed8] transition-all transform hover:scale-105 uppercase tracking-wide text-white">
+                NORMAL 🥘
+            </button>
+            <button id="btnHard" class="w-full bg-gradient-to-b from-red-400 to-red-600 border-4 border-white rounded-full py-4 shadow-[0_6px_0_#b91c1c] hover:translate-y-1 active:shadow-[0_2px_0_#b91c1c] transition-all transform hover:scale-105 uppercase tracking-wide text-white">
+                DIFÍCIL 🔥
+            </button>
+        </div>
+
+        <!-- Start Screen Music Toggle -->
+        <button id="startMusicToggle" class="bg-purple-600 hover:bg-purple-500 text-white font-game text-xl py-2 px-6 rounded-full border-2 border-white shadow-[0_0_10px_rgba(168,85,247,0.5)] flex items-center gap-2 transition-all transform hover:scale-105 mb-4">
+            <span>🎵</span> Música: OFF
+        </button>
+
+        <button id="rankingBtn" class="absolute top-6 right-6 text-5xl hover:scale-110 transition-transform drop-shadow-lg cursor-pointer z-50 filter drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)]">
+            🏆
+        </button>
+        
+        <p class="mt-4 text-yellow-300 font-bold text-lg animate-pulse drop-shadow-md">🔊 ¡Sound ON para disfrutar a tope! 🔊</p>
+
+        <p class="mt-8 text-sm text-white/80 font-bold drop-shadow-md">Versión Canalla 1.2 - Hecho en Murcia</p>
+    </div>
+
+    <!-- Pause Screen -->
+    <div id="pauseScreen" class="hidden absolute inset-0 z-25 flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm">
+        <h2 class="font-game text-6xl text-white drop-shadow-lg mb-8 tracking-widest">PAUSA</h2>
+        <button id="resumeBtn" class="bg-yellow-500 hover:bg-yellow-400 text-black font-game text-3xl py-3 px-8 rounded-full border-4 border-yellow-700 shadow-lg uppercase mb-4">
+            SEGUIR
+        </button>
+        <p class="text-white/70 text-sm mt-4">Toca la pantalla pa' volver</p>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="gameOverScreen" class="hidden absolute inset-0 z-30 flex flex-col items-center justify-center bg-gray-900/95 backdrop-blur-md p-6 text-center text-white">
+        <h1 class="font-game text-6xl text-red-500 drop-shadow-[0_4px_0_rgba(0,0,0,0.5)] mb-4 animate-bounce">¡SE ACABÓ!</h1>
+        
+        <div class="bg-gray-800 p-6 rounded-xl border-4 border-gray-600 w-full max-w-sm mb-6 relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-red-500 via-yellow-500 to-green-500"></div>
+            <p class="text-gray-400 text-sm uppercase tracking-widest mb-1">Puntuación Final</p>
+            <p id="finalScore" class="font-game text-6xl text-yellow-400 mb-4">0</p>
+            
+            <div class="space-y-3">
+                <input type="text" id="playerName" placeholder="Tu mote" maxlength="40" class="w-full bg-gray-700 text-white text-center text-2xl font-mono p-3 rounded border-2 border-gray-500 focus:border-yellow-400 focus:outline-none transition-colors placeholder-gray-500">
+                <button id="submitScoreBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded shadow-lg transition-colors text-sm uppercase tracking-wide">
+                    Guardar en el Ranking
+                </button>
+                <div id="submitMsg" class="text-xs h-4 text-green-400 font-bold"></div>
+            </div>
+        </div>
+
+        <div class="bg-gray-800/50 p-4 rounded-lg border border-gray-700 w-full max-w-sm mb-6">
+            <h3 class="font-game text-xl text-gray-300 mb-3 border-b border-gray-700 pb-2">🏆 Top 10 Canallas</h3>
+            <div class="max-h-40 overflow-y-auto custom-scrollbar">
+                <table class="w-full text-left text-sm">
+                    <thead>
+                        <tr class="text-gray-500 text-xs uppercase">
+                            <th class="pb-2 pl-2">#</th>
+                            <th class="pb-2">Mote</th>
+                            <th class="pb-2 text-right pr-2">Pts</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboardBody" class="font-mono text-gray-300">
+                        <!-- Loaded dynamically -->
+                        <tr><td colspan="3" class="text-center py-2 text-gray-600 italic">Cargando...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <button id="restartBtn" class="bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-game text-2xl py-3 px-8 rounded-full shadow-[0_4px_0_rgb(161,98,7)] active:shadow-[0_1px_0_rgb(161,98,7)] active:translate-y-1 transition-all border-4 border-yellow-700 uppercase">
+            Otra Ronda 🍺
+        </button>
+    </div>
+
+    <!-- Ranking Screen -->
+    <div id="rankingScreen" class="hidden absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/80 backdrop-blur-md p-4">
+        <button id="closeRankingBtn" class="absolute top-4 right-4 text-white text-4xl hover:scale-110 transition-transform bg-red-600 rounded-full w-12 h-12 flex items-center justify-center border-2 border-white shadow-lg z-50">❌</button>
+        
+        <h2 class="font-game text-5xl text-yellow-400 drop-shadow-[0_4px_0_#000] mb-6 tracking-widest text-center transform -rotate-2">🏆 HALL OF FAME 🏆</h2>
+        
+        <!-- Tabs -->
+        <div class="flex space-x-2 mb-0 w-full max-w-md justify-center z-10 px-2">
+            <button id="tabEasy" class="ranking-tab flex-1 py-3 rounded-t-xl font-bold uppercase text-sm bg-green-600 text-white border-x-2 border-t-2 border-white/20 shadow-lg transform translate-y-1 hover:translate-y-0 transition-transform" data-diff="easy">Fácil 🐢</button>
+            <button id="tabNormal" class="ranking-tab flex-1 py-3 rounded-t-xl font-bold uppercase text-sm bg-gray-700 text-gray-400 border-x-2 border-t-2 border-transparent hover:bg-gray-600 transition-colors" data-diff="normal">Normal 🥘</button>
+            <button id="tabHard" class="ranking-tab flex-1 py-3 rounded-t-xl font-bold uppercase text-sm bg-gray-700 text-gray-400 border-x-2 border-t-2 border-transparent hover:bg-gray-600 transition-colors" data-diff="hard">Difícil 🔥</button>
+        </div>
+        
+        <div class="bg-gray-800/95 rounded-xl border-4 border-yellow-500 w-full max-w-md h-[60vh] overflow-hidden flex flex-col shadow-[0_0_50px_rgba(234,179,8,0.2)] relative z-0">
+            <div class="overflow-y-auto custom-scrollbar flex-grow p-0">
+                <table class="w-full text-left text-sm text-white">
+                    <thead class="sticky top-0 bg-gray-900 z-10 shadow-md">
+                        <tr class="text-yellow-500 text-xs uppercase tracking-wider">
+                            <th class="p-3 bg-gray-900">#</th>
+                            <th class="p-3 bg-gray-900">Mote</th>
+                            <th class="p-3 text-right bg-gray-900">Puntuación</th>
+                        </tr>
+                    </thead>
+                    <tbody id="fullLeaderboardBody" class="font-mono text-gray-300 divide-y divide-gray-700">
+                        <tr><td colspan="3" class="text-center py-8 text-gray-500 animate-pulse">Cargando...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Background Music -->
+    <audio id="bgMusic" loop src="music.mp3" preload="auto"></audio>
+
+    <script src="script.js"></script>
+</body>
+</html>
