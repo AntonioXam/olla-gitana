@@ -1,5 +1,5 @@
 /**
- * Olla Gitana: El Juego - Visual & Gameplay Overhaul v5
+ * Olla Gitana: El Juego - Visual & Gameplay Overhaul v6
  * Author: Subagent (OpenClaw)
  * Date: 2026-02-16
  */
@@ -17,9 +17,12 @@ const CONFIG = {
     MAX_LEVELS: 20,
     
     DIFFICULTY: {
-        easy: { speed: 2, accel: 0.3, prefix: '[E]', label: 'FÁCIL' },
-        normal: { speed: 3, accel: 0.5, prefix: '[N]', label: 'NORMAL' },
-        hard: { speed: 5, accel: 0.8, prefix: '[H]', label: 'DIFÍCIL' }
+        easy: { speed: 2, accel: 0.3, prefix: '[E]', label: 'FÁCIL 🐢', 
+            classes: 'from-green-400 to-green-600 shadow-[0_6px_0_#15803d] active:shadow-[0_2px_0_#15803d]' },
+        normal: { speed: 3, accel: 0.5, prefix: '[N]', label: 'NORMAL 🥘', 
+            classes: 'from-blue-400 to-blue-600 shadow-[0_6px_0_#1d4ed8] active:shadow-[0_2px_0_#1d4ed8]' },
+        hard: { speed: 5, accel: 0.8, prefix: '[H]', label: 'DIFÍCIL 🔥', 
+            classes: 'from-red-400 to-red-600 shadow-[0_6px_0_#b91c1c] active:shadow-[0_2px_0_#b91c1c]' }
     }
 };
 
@@ -30,7 +33,7 @@ const ZARANGOLLO_KEY = 'ZARANGOLLO';
 const ASSETS = {
     GOOD_BASE: [PUMPKIN_KEY, '🍐', '🌿'],
     BAD_BASE: ['💊', '💉'],
-    GOOD_EXTRAS: ['🧆', '🌶️', '🥔', '🥖', '🥕', '🧅', '🧄', '🍅', '🍆', '🌽', '🍄', '🥦', '🥒', '🥬', '🍈', '🍉', '🍊', '🍋', '🍌', '🍍'],
+    GOOD_EXTRAS: ['🧆', '🌶️', '🥔', '🥖', '🥕', '🧅', '🧄', '🍅', '🍆', '🌽', '🍄', '🥦', '🥒', '🥬', '🍈', '🍉', '🍊', '🍋', '🍌', '🍍', '🥗', '🍲', '🥣'],
     BAD_EXTRAS: ['🚬', '💩', '💀', '💣', '🦠', '🧫', '🩸', '🦴', '🕷️', '🦂', '🦟', '🪰', '🪳', '🐜', '🐌', '🐛', '🤢', '🤮', '👺', '👹'],
 
     BACKGROUNDS: {
@@ -51,6 +54,7 @@ const ASSETS = {
             "¡Emperifollá!", "¡Miaja!", "¡Panizo!", "¡Tira p'alante!"
         ],
         GAME_OVER: ["¡Ojete calor!", "¡Menudo pijo!", "¡Gambitero!", "¡Te has 'quedao' pajarito!", "¡Acho, pijo, huevo!", "¡Se te ha ido la olla!"],
+        GOOD_HIT: ["¡Toma!", "¡Ole!", "¡Acho!", "¡Dale!", "¡Rico!", "¡Ñam!", "¡Sabor!", "¡Murcia!", "¡Huerta!", "¡Fresco!"]
     }
 };
 
@@ -353,8 +357,12 @@ let state = {
     lastPlayerX: CONFIG.GAME_WIDTH / 2 - CONFIG.PLAYER_WIDTH / 2,
     playerVelocity: 0,
     heartSpawnedForLevel: false,
-    lastBgIndex: -1
+    lastBgIndex: -1,
+    levelUpPause: false // New state for Level Up pause
 };
+
+let currentDiffIndex = 1; // 0: Easy, 1: Normal, 2: Hard
+const difficultyKeys = ['easy', 'normal', 'hard'];
 
 // --- DOM ELEMENTS ---
 const canvas = document.getElementById('gameCanvas');
@@ -376,6 +384,8 @@ const leaderboardBody = document.getElementById('leaderboardBody');
 const fullLeaderboardBody = document.getElementById('fullLeaderboardBody');
 const submitScoreBtn = document.getElementById('submitScoreBtn');
 const playerNameInput = document.getElementById('playerName');
+const instructionsModal = document.getElementById('instructionsModal');
+const difficultyToggle = document.getElementById('difficultyToggle');
 
 // --- RESIZE ---
 function resize() {
@@ -421,7 +431,7 @@ function getItemPool() {
 }
 
 function handleInput(x) {
-    if (state.isPaused || !state.isRunning) return;
+    if (state.isPaused || !state.isRunning || state.levelUpPause) return;
     let targetX = x - CONFIG.PLAYER_WIDTH / 2;
     state.playerX = Math.max(0, Math.min(CONFIG.GAME_WIDTH - CONFIG.PLAYER_WIDTH, targetX));
 }
@@ -496,7 +506,7 @@ function drawPot(x, y, w, h) {
     ctx.restore();
 }
 
-function startGame(difficulty = 'easy') {
+function startGame(difficulty) {
     AudioEngine.init();
     AudioEngine.ensureMusicPlaying();
     VFX.init();
@@ -519,7 +529,8 @@ function startGame(difficulty = 'easy') {
         playerVelocity: 0,
         heartSpawnedForLevel: false,
         lastBgIndex: -1,
-        combo: 0
+        combo: 0,
+        levelUpPause: false
     };
 
     startScreen.classList.add('hidden');
@@ -534,7 +545,7 @@ function startGame(difficulty = 'easy') {
 }
 
 function togglePause() {
-    if (!state.isRunning) return;
+    if (!state.isRunning || state.levelUpPause) return;
     state.isPaused = !state.isPaused;
     if (state.isPaused) pauseScreen.classList.remove('hidden');
     else {
@@ -545,8 +556,16 @@ function togglePause() {
 
 function gameLoop() {
     if (!state.isRunning || state.isPaused) return;
-    update();
-    draw();
+
+    if (!state.levelUpPause) {
+        update();
+    }
+    
+    // Even if paused by level up, we might want to draw (or just freeze)
+    // But since we want to "PAUSE the spawning/movement", we skip update() but call draw() 
+    // to keep rendering frame.
+    draw(); 
+    
     state.frames++;
     requestAnimationFrame(gameLoop);
 }
@@ -623,6 +642,7 @@ function spawnItem() {
     const pool = getItemPool();
     const isBad = Math.random() < 0.3;
     const sourceArray = isBad ? pool.bad : pool.good;
+    // Ensure randomization
     const text = sourceArray[Math.floor(Math.random() * sourceArray.length)];
     const x = Math.random() * (CONFIG.GAME_WIDTH - CONFIG.ITEM_SIZE);
     
@@ -672,7 +692,8 @@ function handleCollision(item, index) {
         VFX.spawnConfetti(cx, cy);
         
         if (state.combo > 1) {
-             const phrases = ["¡Toma!", "¡Ole!", "¡Acho!", "¡Dale!"];
+             const phrases = ASSETS.TEXTS.GOOD_HIT;
+             // Ensure random pick
              const phrase = phrases[Math.floor(Math.random() * phrases.length)];
              VFX.spawnText(cx, cy - 30, `${phrase} x${multiplier.toFixed(1)}`, '#ffff00', 25 + Math.min(20, state.combo * 2));
         } else {
@@ -697,7 +718,7 @@ function checkLevelUp() {
     const projectedLevel = Math.floor(state.score / CONFIG.LEVEL_THRESHOLD) + 1;
     if (projectedLevel > state.level && state.level < CONFIG.MAX_LEVELS) {
         state.level = projectedLevel;
-        state.speed += state.acceleration; // Use difficulty-based acceleration
+        state.speed += state.acceleration; 
         state.heartSpawnedForLevel = false;
         setBackground('game'); 
         AudioEngine.playLevelUp(state.level);
@@ -709,15 +730,29 @@ function showLevelUpParams() {
     newLevelNum.innerText = state.level;
     const container = document.getElementById('levelUpMsg');
     const msgBox = container.firstElementChild;
-    msgBox.querySelector('h2').innerText = ASSETS.TEXTS.LEVEL_UP[Math.floor(Math.random() * ASSETS.TEXTS.LEVEL_UP.length)];
+    
+    // Pick unique message (avoid repeating last one if possible)
+    let msg;
+    const msgs = ASSETS.TEXTS.LEVEL_UP;
+    msg = msgs[Math.floor(Math.random() * msgs.length)];
+    
+    msgBox.querySelector('h2').innerText = msg;
     container.classList.remove('hidden');
     msgBox.classList.remove('scale-0');
     msgBox.classList.add('scale-100');
+    
+    // PAUSE GAMEPLAY LOGIC
+    state.levelUpPause = true;
+
     setTimeout(() => {
         msgBox.classList.remove('scale-100');
         msgBox.classList.add('scale-0');
-        setTimeout(() => container.classList.add('hidden'), 300);
-    }, 2000);
+        setTimeout(() => {
+            container.classList.add('hidden');
+            // RESUME GAMEPLAY
+            state.levelUpPause = false;
+        }, 300);
+    }, 3000); // 3 seconds pause
 }
 
 function drawHeart(x, y, size) {
@@ -940,9 +975,36 @@ async function loadLeaderboard(difficulty, targetElement, limit = 100) {
 }
 
 // --- EVENT LISTENERS ---
-document.getElementById('btnEasy').addEventListener('click', () => startGame('easy'));
-document.getElementById('btnNormal').addEventListener('click', () => startGame('normal'));
-document.getElementById('btnHard').addEventListener('click', () => startGame('hard'));
+// Difficulty Toggle
+function updateDifficultyUI() {
+    const key = difficultyKeys[currentDiffIndex];
+    const conf = CONFIG.DIFFICULTY[key];
+    
+    difficultyToggle.innerText = conf.label; 
+    
+    // Reset base classes then add dynamic ones
+    difficultyToggle.className = `w-full bg-gradient-to-b border-4 border-white rounded-full py-4 hover:translate-y-1 transition-all transform hover:scale-105 font-game text-xl md:text-2xl uppercase tracking-wide text-white ${conf.classes}`;
+}
+
+difficultyToggle.addEventListener('click', () => {
+    currentDiffIndex = (currentDiffIndex + 1) % difficultyKeys.length;
+    updateDifficultyUI();
+});
+
+// Start Button
+document.getElementById('btnStartGame').addEventListener('click', () => {
+    const diff = difficultyKeys[currentDiffIndex];
+    startGame(diff);
+});
+
+// Instructions Modal
+document.getElementById('btnInstructions').addEventListener('click', () => {
+    instructionsModal.classList.remove('hidden');
+});
+const closeInst = () => instructionsModal.classList.add('hidden');
+document.getElementById('closeInstructionsBtn').addEventListener('click', closeInst);
+document.getElementById('closeInstructionsBtnBottom').addEventListener('click', closeInst);
+
 
 document.getElementById('restartBtn').addEventListener('click', () => startGame(state.difficulty));
 document.getElementById('resumeBtn').addEventListener('click', togglePause);
@@ -1022,6 +1084,7 @@ submitScoreBtn.addEventListener('click', () => {
 window.addEventListener('contextmenu', e => e.preventDefault());
 
 // Init
+updateDifficultyUI(); // Init button state
 AudioEngine.init();
 setBackground('start');
 

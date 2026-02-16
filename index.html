@@ -48,55 +48,80 @@
     </div>
 
     <!-- Start Screen -->
-    <div id="startScreen" class="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm p-6 text-center shadow-inner">
-        <h1 class="font-game text-6xl md:text-8xl text-yellow-400 drop-shadow-[0_5px_0_rgba(180,83,9,1)] mb-4 transform -rotate-3 tracking-wider">OLLA GITANA</h1>
-        <h2 class="font-game text-4xl md:text-6xl text-white drop-shadow-[0_3px_0_rgba(0,0,0,0.8)] mb-10 transform rotate-2">EL JUEGO 🥘</h2>
+    <div id="startScreen" class="absolute inset-0 z-20 flex flex-col items-center justify-start pt-16 bg-black/60 backdrop-blur-sm p-6 text-center shadow-inner overflow-y-auto">
+        <h1 class="font-game text-7xl md:text-9xl text-yellow-400 drop-shadow-[0_6px_0_rgba(180,83,9,1)] mb-2 transform -rotate-3 tracking-wider leading-none">OLLA GITANA</h1>
+        <h2 class="font-game text-4xl md:text-6xl text-white drop-shadow-[0_4px_0_rgba(0,0,0,0.8)] mb-8 transform rotate-2">EL JUEGO 🥘</h2>
         
-        <div class="bg-orange-100/90 p-6 rounded-xl shadow-[0_10px_20px_rgba(0,0,0,0.5)] border-4 border-orange-600 max-w-sm w-full mb-10 transform -rotate-1">
-            <p class="text-orange-900 mb-4 font-bold text-xl uppercase border-b-2 border-orange-300 pb-2">Instrucciones pa' zagales</p>
+        <!-- Action Buttons Container -->
+        <div class="flex flex-col items-center gap-5 w-full max-w-sm z-30">
             
-            <div class="flex justify-center space-x-2 mb-2 text-3xl drop-shadow-sm filter drop-shadow-lg">
-                <span>🎃</span><span>🍐</span><span>🌿</span><span>🧆</span><span>🌶️</span>
-            </div>
-            <p class="text-sm text-gray-800 mb-3 font-bold">Pilla lo bueno (+10 pts)</p>
-            
-            <div class="flex justify-center mb-1">
-                <span class="text-3xl drop-shadow-lg animate-pulse">❤️</span>
-            </div>
-            <p class="text-sm text-red-600 mb-3 font-bold">¡Corazón = Vida Extra!</p>
-
-            <div class="flex justify-center space-x-2 mb-2 text-3xl opacity-90">
-                <span>💊</span><span>💉</span><span>🚬</span><span>💀</span>
-            </div>
-            <p class="text-sm text-red-700 font-extrabold mb-1 uppercase tracking-tight bg-red-100 px-2 py-1 rounded inline-block">¡Ni toques la mierda!</p>
-            <p class="text-xs text-orange-800/80 italic font-bold">(-1 vida)</p>
-        </div>
-
-        <!-- Difficulty Selection -->
-        <div class="flex flex-col gap-4 mb-6 w-full max-w-sm px-6 z-30 font-game text-3xl">
-            <button id="btnEasy" class="w-full bg-gradient-to-b from-green-400 to-green-600 border-4 border-white rounded-full py-4 shadow-[0_6px_0_#15803d] hover:translate-y-1 active:shadow-[0_2px_0_#15803d] transition-all transform hover:scale-105 uppercase tracking-wide text-white">
-                FÁCIL 🐢
+            <!-- Instructions Button -->
+            <button id="btnInstructions" class="bg-orange-500 hover:bg-orange-400 text-white font-game text-2xl py-2 px-6 rounded-full border-4 border-white shadow-[0_4px_0_#c2410c] hover:translate-y-1 active:shadow-none transition-all w-4/5">
+                ℹ️ CÓMO JUGAR
             </button>
-            <button id="btnNormal" class="w-full bg-gradient-to-b from-blue-400 to-blue-600 border-4 border-white rounded-full py-4 shadow-[0_6px_0_#1d4ed8] hover:translate-y-1 active:shadow-[0_2px_0_#1d4ed8] transition-all transform hover:scale-105 uppercase tracking-wide text-white">
-                NORMAL 🥘
+
+            <!-- Difficulty Toggle -->
+            <button id="difficultyToggle" class="w-full bg-gradient-to-b from-blue-400 to-blue-600 border-4 border-white rounded-full py-4 shadow-[0_6px_0_#1d4ed8] hover:translate-y-1 active:shadow-[0_2px_0_#1d4ed8] transition-all transform hover:scale-105 font-game text-3xl uppercase tracking-wide text-white">
+                DIFICULTAD: NORMAL 🥘
             </button>
-            <button id="btnHard" class="w-full bg-gradient-to-b from-red-400 to-red-600 border-4 border-white rounded-full py-4 shadow-[0_6px_0_#b91c1c] hover:translate-y-1 active:shadow-[0_2px_0_#b91c1c] transition-all transform hover:scale-105 uppercase tracking-wide text-white">
-                DIFÍCIL 🔥
+
+            <!-- Start Button (previously implicit in difficulty buttons, now explicit) -->
+             <button id="btnStartGame" class="w-full bg-gradient-to-b from-green-400 to-green-600 border-4 border-white rounded-full py-5 shadow-[0_8px_0_#15803d] hover:translate-y-1 active:shadow-[0_2px_0_#15803d] transition-all transform hover:scale-105 font-game text-5xl uppercase tracking-wide text-white animate-pulse">
+                ¡JUGAR!
+            </button>
+
+             <!-- Start Screen Music Toggle -->
+            <button id="startMusicToggle" class="bg-purple-600 hover:bg-purple-500 text-white font-game text-xl py-2 px-6 rounded-full border-2 border-white shadow-[0_0_10px_rgba(168,85,247,0.5)] flex items-center gap-2 transition-all transform hover:scale-105 mt-2">
+                <span>🎵</span> Música: OFF
             </button>
         </div>
 
-        <!-- Start Screen Music Toggle -->
-        <button id="startMusicToggle" class="bg-purple-600 hover:bg-purple-500 text-white font-game text-xl py-2 px-6 rounded-full border-2 border-white shadow-[0_0_10px_rgba(168,85,247,0.5)] flex items-center gap-2 transition-all transform hover:scale-105 mb-4">
-            <span>🎵</span> Música: OFF
-        </button>
-
-        <button id="rankingBtn" class="absolute top-6 right-6 text-5xl hover:scale-110 transition-transform drop-shadow-lg cursor-pointer z-50 filter drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)]">
-            🏆
+        <!-- Ranking Button (Big Cup) -->
+        <button id="rankingBtn" class="absolute top-4 right-4 flex flex-col items-center hover:scale-110 transition-transform cursor-pointer z-50 group">
+            <span class="text-6xl drop-shadow-lg filter drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)]">🏆</span>
+            <span class="font-game text-white text-xl border-2 border-white bg-black/50 px-2 rounded-full -mt-2 group-hover:bg-yellow-500 group-hover:text-black transition-colors">RANKING</span>
         </button>
         
-        <p class="mt-4 text-yellow-300 font-bold text-lg animate-pulse drop-shadow-md">🔊 ¡Sound ON para disfrutar a tope! 🔊</p>
+        <p class="mt-auto mb-4 text-yellow-300 font-bold text-lg animate-pulse drop-shadow-md pt-4">🔊 ¡Sound ON para disfrutar a tope! 🔊</p>
+        <p class="text-xs text-white/80 font-bold drop-shadow-md pb-4">Versión Canalla 1.3 - Hecho en Murcia</p>
+    </div>
 
-        <p class="mt-8 text-sm text-white/80 font-bold drop-shadow-md">Versión Canalla 1.2 - Hecho en Murcia</p>
+    <!-- Instructions Modal -->
+    <div id="instructionsModal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+        <div class="bg-orange-100 p-6 rounded-xl shadow-2xl border-4 border-orange-600 max-w-sm w-full relative">
+            <button id="closeInstructionsBtn" class="absolute -top-4 -right-4 bg-red-600 text-white rounded-full w-10 h-10 border-2 border-white font-bold text-xl shadow-lg">X</button>
+            
+            <h3 class="font-game text-3xl text-orange-800 text-center mb-4">CÓMO JUGAR</h3>
+            
+            <div class="space-y-4">
+                <div class="bg-white/50 p-2 rounded-lg">
+                    <div class="flex justify-center space-x-2 mb-1 text-3xl">
+                        <span>🎃</span><span>🍐</span><span>🌿</span><span>🧆</span><span>🌶️</span>
+                    </div>
+                    <p class="text-center font-bold text-gray-800">Pilla lo bueno (+10 pts)</p>
+                    <p class="text-center text-xs text-gray-600">Zarangollo, michirones, paparajotes...</p>
+                </div>
+
+                <div class="bg-white/50 p-2 rounded-lg">
+                    <div class="flex justify-center mb-1">
+                        <span class="text-3xl animate-pulse">❤️</span>
+                    </div>
+                    <p class="text-center font-bold text-red-600">¡Corazón = Vida Extra!</p>
+                </div>
+
+                <div class="bg-white/50 p-2 rounded-lg">
+                    <div class="flex justify-center space-x-2 mb-1 text-3xl">
+                        <span>💊</span><span>💉</span><span>🚬</span><span>💀</span>
+                    </div>
+                    <p class="text-center font-bold text-red-800 uppercase">¡Ni toques la mierda!</p>
+                    <p class="text-center text-xs text-red-600 font-bold">(-1 vida)</p>
+                </div>
+            </div>
+            
+            <button id="closeInstructionsBtnBottom" class="w-full mt-6 bg-orange-500 hover:bg-orange-600 text-white font-game text-xl py-2 rounded-lg shadow-[0_4px_0_#9a3412] active:shadow-none active:translate-y-1 transition-all">
+                ¡ENTENDIDO!
+            </button>
+        </div>
     </div>
 
     <!-- Pause Screen -->
