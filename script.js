@@ -29,6 +29,8 @@ const CONFIG = {
 // --- ASSETS ---
 const PUMPKIN_KEY = 'TOTANERA';
 const ZARANGOLLO_KEY = 'ZARANGOLLO';
+const MUSHROOM_KEY = '🍄';
+const LEMON_KEY = '🍋';
 
 const ASSETS = {
     GOOD_BASE: [PUMPKIN_KEY, '🍐', '🌿'],
@@ -68,16 +70,6 @@ const VFX = {
         this.particles = [];
         this.foregroundClouds = [];
         this.floatingTexts = [];
-        // Init clouds
-        for(let i=0; i<10; i++) {
-            this.foregroundClouds.push({
-                x: Math.random() * CONFIG.GAME_WIDTH,
-                y: CONFIG.GAME_HEIGHT - Math.random() * 150,
-                size: 50 + Math.random() * 100,
-                speed: 0.5 + Math.random() * 1,
-                alpha: 0.1 + Math.random() * 0.2
-            });
-        }
     },
 
     spawnConfetti: function(x, y) {
@@ -127,6 +119,23 @@ const VFX = {
     },
 
     update: function() {
+        // Spawn Fire (Constant at bottom)
+        if(state.isRunning && !state.isPaused) {
+            for(let i=0; i<5; i++) {
+                this.particles.push({
+                    x: Math.random() * CONFIG.GAME_WIDTH,
+                    y: CONFIG.GAME_HEIGHT,
+                    vx: (Math.random() - 0.5) * 2,
+                    vy: -2 - Math.random() * 3, // Upward
+                    size: Math.random() * 10 + 5,
+                    life: 1.0,
+                    decay: 0.02 + Math.random() * 0.03,
+                    type: 'fire',
+                    color: Math.random() > 0.5 ? '#FF4500' : '#FFD700' // OrangeRed / Gold
+                });
+            }
+        }
+
         for (let i = this.particles.length - 1; i >= 0; i--) {
             let p = this.particles[i];
             p.x += p.vx;
@@ -139,6 +148,9 @@ const VFX = {
             } else if (p.type === 'smoke') {
                 p.size += 0.5; // Expand
                 p.vy *= 0.95; // Slow down
+            } else if (p.type === 'fire') {
+                p.size *= 0.95; // Shrink
+                p.x += Math.sin(state.frames * 0.1 + p.y * 0.01) * 0.5; // Wiggle
             }
 
             if (p.life <= 0) this.particles.splice(i, 1);
@@ -178,6 +190,13 @@ const VFX = {
                 ctx.beginPath();
                 ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
                 ctx.fill();
+            } else if (p.type === 'fire') {
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = p.color;
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
             }
             ctx.restore();
         }
@@ -195,13 +214,7 @@ const VFX = {
             ctx.restore();
         }
 
-        // Draw Foreground Clouds (Fog)
-        for(let cloud of this.foregroundClouds) {
-            ctx.fillStyle = `rgba(255, 255, 255, ${cloud.alpha})`;
-            ctx.beginPath();
-            ctx.arc(cloud.x, cloud.y, cloud.size, 0, Math.PI * 2);
-            ctx.fill();
-        }
+        // Draw Foreground Clouds (Fog) - Removed
     }
 };
 
@@ -543,7 +556,10 @@ function startGame(difficulty) {
         heartSpawnedForLevel: false,
         lastBgIndex: -1,
         combo: 0,
-        levelUpPause: false
+        levelUpPause: false,
+        lemonSpawnedForLevel: false,
+        timeFreeze: 0, // Timer for slow motion
+        originalSpeed: 0 // Store speed before slow motion
     };
 
     startScreen.classList.add('hidden');
@@ -595,9 +611,17 @@ function update() {
     const potLeft = state.playerX + 10;
     const potRight = state.playerX + CONFIG.PLAYER_WIDTH - 10;
 
+    // Time Freeze Logic
+    let speedMult = 1.0;
+    if(state.timeFreeze > 0) {
+        speedMult = 0.5;
+        state.timeFreeze--;
+        if(state.timeFreeze % 60 === 0) VFX.spawnText(state.playerX, potTop - 50, "❄️", '#fff', 30);
+    }
+
     for (let i = state.items.length - 1; i >= 0; i--) {
         let item = state.items[i];
-        item.y += item.speed;
+        item.y += item.speed * speedMult;
 
         // Bobbing Animation Update (sway)
         item.bobOffset = Math.sin(state.frames * 0.05) * 2; 
@@ -608,7 +632,8 @@ function update() {
             item.x + item.size/2 > potLeft &&
             item.x + item.size/2 < potRight
         ) {
-            handleCollision(item, i);
+            const result = handleCollision(item, i);
+            if(result === true) break; // Lemon cleared items
             continue;
         }
         if (item.y > CONFIG.GAME_HEIGHT) {
@@ -638,6 +663,21 @@ function spawnItem() {
         return;
     }
 
+    // Giant Lemon (Screen Clear) - Every 4 levels
+    if (state.level % 4 === 0 && !state.lemonSpawnedForLevel && Math.random() < 0.20) {
+        state.items.push({
+            x: Math.random() * (CONFIG.GAME_WIDTH - CONFIG.ITEM_SIZE * 2),
+            y: -CONFIG.ITEM_SIZE * 2,
+            size: CONFIG.ITEM_SIZE * 2.0, // Scale 2.0
+            type: 'lemon',
+            text: LEMON_KEY,
+            speed: state.speed * 0.8, // Slower due to size
+            bobOffset: 0
+        });
+        state.lemonSpawnedForLevel = true;
+        return;
+    }
+
     // Zarangollo Supremo (5% chance)
     if (Math.random() < 0.05) {
         state.items.push({
@@ -647,6 +687,20 @@ function spawnItem() {
             type: 'zarangollo',
             text: ZARANGOLLO_KEY,
             speed: state.speed * 1.5, // Faster!
+            bobOffset: 0
+        });
+        return;
+    }
+
+    // Mushroom (Time Freeze) - 3% chance
+    if (Math.random() < 0.03) {
+        state.items.push({
+            x: Math.random() * (CONFIG.GAME_WIDTH - CONFIG.ITEM_SIZE),
+            y: -CONFIG.ITEM_SIZE,
+            size: CONFIG.ITEM_SIZE,
+            type: 'mushroom',
+            text: MUSHROOM_KEY,
+            speed: state.speed,
             bobOffset: 0
         });
         return;
@@ -685,6 +739,36 @@ function handleCollision(item, index) {
         VFX.spawnConfetti(cx, cy); 
         VFX.spawnText(cx, cy - 50, "¡VIDA EXTRA!", '#ff4d4d', 30);
         updateHUD();
+        return;
+    }
+
+    if (item.type === 'lemon') {
+        // Screen Clear Bomb
+        state.items = []; // Remove all active items
+        state.score += 500;
+        AudioEngine.playTone('good');
+        
+        // Visuals
+        VFX.spawnConfetti(cx, cy);
+        VFX.spawnText(CONFIG.GAME_WIDTH/2, CONFIG.GAME_HEIGHT/2, "¡COPÓN QUÉ RICO!", '#FFD700', 60);
+        
+        // Pause spawning for 3 seconds
+        state.levelUpPause = true; 
+        setTimeout(() => {
+            state.levelUpPause = false;
+        }, 3000);
+        
+        document.body.classList.add('flash-screen');
+        setTimeout(() => document.body.classList.remove('flash-screen'), 500);
+        return true; // Signal to stop loop
+    }
+
+    if (item.type === 'mushroom') {
+        // Slow Motion
+        state.timeFreeze = 300; // 5 seconds (60fps * 5)
+        AudioEngine.playTone('good');
+        VFX.spawnConfetti(cx, cy);
+        VFX.spawnText(cx, cy - 50, "¡RELAX!", '#e74c3c', 40);
         return;
     }
 
@@ -740,6 +824,7 @@ function checkLevelUp() {
         state.level = projectedLevel;
         state.speed += state.acceleration; 
         state.heartSpawnedForLevel = false;
+        state.lemonSpawnedForLevel = false;
         setBackground('game'); 
         AudioEngine.playLevelUp(state.level);
         showLevelUpParams();
