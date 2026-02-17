@@ -218,14 +218,22 @@ const AudioEngine = {
             const AudioContext = window.AudioContext || window.webkitAudioContext;
             if (AudioContext) this.ctx = new AudioContext();
         }
-        this.musicElement = document.getElementById('bgMusic');
         
-        this.badHitElement = new Audio('hit.mp3'); 
-        this.badHitElement.volume = 0.8;
+        // Prevent multiple initializations of music element reference
+        if (!this.musicElement) {
+             this.musicElement = document.getElementById('bgMusic');
+        }
 
-        this.levelUpSpecialElement = new Audio('levelup_special.mp3');
-        this.levelUpSpecialElement.volume = 1.0;
-        this.levelUpSpecialElement.load(); // Preload
+        if (!this.badHitElement) {
+            this.badHitElement = new Audio('hit.mp3'); 
+            this.badHitElement.volume = 0.8;
+        }
+
+        if (!this.levelUpSpecialElement) {
+            this.levelUpSpecialElement = new Audio('levelup_special.mp3');
+            this.levelUpSpecialElement.volume = 1.0;
+            this.levelUpSpecialElement.load(); // Preload
+        }
     },
 
     toggleMusic: function() {

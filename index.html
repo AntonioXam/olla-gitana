@@ -87,38 +87,38 @@
     </div>
 
     <!-- Instructions Modal -->
-    <div id="instructionsModal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+    <div id="instructionsModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
         <div class="bg-orange-100 p-6 rounded-xl shadow-2xl border-4 border-orange-600 max-w-sm w-full relative">
-            <button id="closeInstructionsBtn" class="absolute -top-4 -right-4 bg-red-600 text-white rounded-full w-10 h-10 border-2 border-white font-bold text-xl shadow-lg">X</button>
+            <button id="closeInstructionsBtn" class="absolute -top-4 -right-4 bg-red-600 text-white rounded-full w-10 h-10 border-2 border-white font-bold text-xl shadow-lg flex items-center justify-center hover:scale-110 transition-transform">X</button>
             
-            <h3 class="font-game text-3xl text-orange-800 text-center mb-4">CÓMO JUGAR</h3>
+            <h3 class="font-game text-3xl text-orange-800 text-center mb-4 drop-shadow-sm">CÓMO JUGAR</h3>
             
             <div class="space-y-4">
-                <div class="bg-white/50 p-2 rounded-lg">
-                    <div class="flex justify-center space-x-2 mb-1 text-3xl">
+                <div class="bg-white/60 p-3 rounded-lg shadow-inner border border-orange-200">
+                    <div class="flex justify-center space-x-2 mb-1 text-3xl filter drop-shadow-sm">
                         <span>🎃</span><span>🍐</span><span>🌿</span><span>🧆</span><span>🌶️</span>
                     </div>
-                    <p class="text-center font-bold text-gray-800">Pilla lo bueno (+10 pts)</p>
-                    <p class="text-center text-xs text-gray-600">Zarangollo, michirones, paparajotes...</p>
+                    <p class="text-center font-bold text-gray-800 text-sm uppercase">Pilla lo bueno (+10 pts)</p>
+                    <p class="text-center text-xs text-gray-600 italic">Zarangollo, michirones, paparajotes...</p>
                 </div>
 
-                <div class="bg-white/50 p-2 rounded-lg">
+                <div class="bg-white/60 p-3 rounded-lg shadow-inner border border-red-200">
                     <div class="flex justify-center mb-1">
-                        <span class="text-3xl animate-pulse">❤️</span>
+                        <span class="text-3xl animate-pulse filter drop-shadow-sm">❤️</span>
                     </div>
-                    <p class="text-center font-bold text-red-600">¡Corazón = Vida Extra!</p>
+                    <p class="text-center font-bold text-red-600 text-sm uppercase">¡Corazón = Vida Extra!</p>
                 </div>
 
-                <div class="bg-white/50 p-2 rounded-lg">
-                    <div class="flex justify-center space-x-2 mb-1 text-3xl">
+                <div class="bg-white/60 p-3 rounded-lg shadow-inner border border-gray-200">
+                    <div class="flex justify-center space-x-2 mb-1 text-3xl grayscale opacity-80">
                         <span>💊</span><span>💉</span><span>🚬</span><span>💀</span>
                     </div>
-                    <p class="text-center font-bold text-red-800 uppercase">¡Ni toques la mierda!</p>
+                    <p class="text-center font-bold text-red-800 text-sm uppercase">¡Ni toques la mierda!</p>
                     <p class="text-center text-xs text-red-600 font-bold">(-1 vida)</p>
                 </div>
             </div>
             
-            <button id="closeInstructionsBtnBottom" class="w-full mt-6 bg-orange-500 hover:bg-orange-600 text-white font-game text-xl py-2 rounded-lg shadow-[0_4px_0_#9a3412] active:shadow-none active:translate-y-1 transition-all">
+            <button id="closeInstructionsBtnBottom" class="w-full mt-6 bg-orange-500 hover:bg-orange-600 text-white font-game text-xl py-3 rounded-lg shadow-[0_4px_0_#9a3412] active:shadow-none active:translate-y-1 transition-all uppercase tracking-wide border-2 border-orange-400">
                 ¡ENTENDIDO!
             </button>
         </div>
