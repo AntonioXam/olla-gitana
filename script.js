@@ -12,7 +12,7 @@ const CONFIG = {
     PLAYER_HEIGHT: 70, 
     ITEM_SIZE: 55, // Slightly larger
     SPAWN_RATE: 70,
-    LEVEL_THRESHOLD: 100,
+    LEVEL_THRESHOLD: 200,
     MAX_LIVES: 3,
     MAX_LEVELS: 20,
     
@@ -724,13 +724,47 @@ function handleCollision(item, index) {
 
 function checkLevelUp() {
     const projectedLevel = Math.floor(state.score / CONFIG.LEVEL_THRESHOLD) + 1;
-    if (projectedLevel > state.level && state.level < CONFIG.MAX_LEVELS) {
+    
+    // Check Victory (Level 21 triggers Win)
+    if (projectedLevel > CONFIG.MAX_LEVELS) {
+        victory();
+        return;
+    }
+
+    if (projectedLevel > state.level) {
         state.level = projectedLevel;
         state.speed += state.acceleration; 
         state.heartSpawnedForLevel = false;
         setBackground('game'); 
         AudioEngine.playLevelUp(state.level);
         showLevelUpParams();
+    }
+}
+
+function victory() {
+    state.isRunning = false;
+    hud.classList.add('hidden');
+    gameOverScreen.classList.remove('hidden');
+    setBackground('gameover');
+    
+    // Victory Text
+    const victoryTitle = gameOverScreen.querySelector('h1');
+    victoryTitle.innerText = "¡ERES EL REY DE LA HUERTA!";
+    victoryTitle.className = "text-5xl md:text-7xl font-black text-yellow-400 drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)] animate-pulse";
+    
+    finalScoreDisplay.innerText = state.score;
+    
+    submitScoreBtn.disabled = false;
+    submitScoreBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+    document.getElementById('submitMsg').innerText = "";
+    
+    loadLeaderboard(state.difficulty, leaderboardBody, 5);
+    
+    // Massive Confetti
+    for(let i=0; i<5; i++) {
+        setTimeout(() => {
+            VFX.spawnConfetti(Math.random() * CONFIG.GAME_WIDTH, Math.random() * CONFIG.GAME_HEIGHT);
+        }, i * 200);
     }
 }
 
@@ -779,6 +813,57 @@ function drawHeart(x, y, size) {
     ctx.bezierCurveTo(x + size / 2, y + (size + topCurveHeight) / 2, x + size, y + (size + topCurveHeight) / 2, x + size, y + topCurveHeight);
     ctx.bezierCurveTo(x + size, y, x + size / 2, y, x + size / 2, y + size / 5);
     ctx.fill();
+    ctx.restore();
+}
+
+function drawZarangollo(x, y, size) {
+    ctx.save();
+    const centerX = x + size/2;
+    const centerY = y + size/2;
+    const pulse = Math.sin(state.frames * 0.1) * 0.1 + 1; // Pulse scale 0.9 to 1.1
+
+    ctx.translate(centerX, centerY);
+    ctx.scale(pulse, pulse);
+    ctx.translate(-centerX, -centerY);
+
+    // Glow
+    ctx.shadowColor = '#FFD700'; // Gold
+    ctx.shadowBlur = 20 + Math.sin(state.frames * 0.2) * 10; // Dynamic blur
+
+    // Plate Body (Golden)
+    const grad = ctx.createRadialGradient(centerX, centerY, size/4, centerX, centerY, size/2);
+    grad.addColorStop(0, '#FFFACD'); // LemonChiffon center
+    grad.addColorStop(0.5, '#FFD700'); // Gold middle
+    grad.addColorStop(1, '#DAA520'); // GoldenRod edge
+    
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, size/2, 0, Math.PI*2);
+    ctx.fill();
+
+    // Rim/Border
+    ctx.strokeStyle = '#B8860B'; // Dark GoldenRod
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, size/2 - 2, 0, Math.PI*2);
+    ctx.stroke();
+
+    // Inner details (Food texture)
+    ctx.fillStyle = '#8B4513'; // SaddleBrown spots (onion/egg bits)
+    for(let i=0; i<5; i++) {
+        const spotX = centerX + (Math.random() - 0.5) * size * 0.6;
+        const spotY = centerY + (Math.random() - 0.5) * size * 0.6;
+        ctx.beginPath();
+        ctx.arc(spotX, spotY, size/15, 0, Math.PI*2);
+        ctx.fill();
+    }
+    
+    // Shine
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+    ctx.beginPath();
+    ctx.ellipse(centerX - size/4, centerY - size/4, size/6, size/10, -0.5, 0, Math.PI*2);
+    ctx.fill();
+
     ctx.restore();
 }
 
@@ -862,6 +947,8 @@ function draw() {
 
         if (item.type === 'heart') {
             drawHeart(renderX, item.y, item.size);
+        } else if (item.type === 'zarangollo') {
+            drawZarangollo(renderX, item.y, item.size);
         } else if (item.text === PUMPKIN_KEY) {
             drawPumpkin(renderX, item.y, item.size);
         } else {
