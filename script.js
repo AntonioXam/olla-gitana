@@ -119,19 +119,19 @@ const VFX = {
     },
 
     update: function() {
-        // Spawn Fire (Constant at bottom)
+        // Spawn Fire (Constant at bottom) - Reduced intensity
         if(state.isRunning && !state.isPaused) {
-            for(let i=0; i<5; i++) {
+            for(let i=0; i<2; i++) {
                 this.particles.push({
                     x: Math.random() * CONFIG.GAME_WIDTH,
                     y: CONFIG.GAME_HEIGHT,
-                    vx: (Math.random() - 0.5) * 2,
-                    vy: -2 - Math.random() * 3, // Upward
-                    size: Math.random() * 10 + 5,
-                    life: 1.0,
-                    decay: 0.02 + Math.random() * 0.03,
+                    vx: (Math.random() - 0.5) * 1.5,
+                    vy: -1 - Math.random() * 2, // Slower Upward
+                    size: Math.random() * 6 + 3, // Smaller
+                    life: 0.8, // Shorter life
+                    decay: 0.03 + Math.random() * 0.03,
                     type: 'fire',
-                    color: Math.random() > 0.5 ? '#FF4500' : '#FFD700' // OrangeRed / Gold
+                    color: Math.random() > 0.5 ? 'rgba(255, 69, 0, 0.5)' : 'rgba(255, 215, 0, 0.5)' // Lower Opacity
                 });
             }
         }
@@ -379,7 +379,8 @@ let state = {
     playerVelocity: 0,
     heartSpawnedForLevel: false,
     lastBgIndex: -1,
-    levelUpPause: false // New state for Level Up pause
+    levelUpPause: false, // New state for Level Up pause
+    isDragging: false // For Pot Feedback
 };
 
 let currentDiffIndex = 1; // 0: Easy, 1: Normal, 2: Hard
@@ -461,9 +462,34 @@ function handleInput(x) {
     let targetX = x - CONFIG.PLAYER_WIDTH / 2;
     state.playerX = Math.max(0, Math.min(CONFIG.GAME_WIDTH - CONFIG.PLAYER_WIDTH, targetX));
 }
-canvas.addEventListener('mousemove', e => handleInput(e.clientX));
-canvas.addEventListener('touchmove', e => { e.preventDefault(); handleInput(e.touches[0].clientX); }, { passive: false });
-canvas.addEventListener('touchstart', e => { e.preventDefault(); handleInput(e.touches[0].clientX); }, { passive: false });
+
+// Event Listeners for Interaction Feedback
+canvas.addEventListener('mousedown', e => {
+    state.isDragging = true;
+    handleInput(e.clientX);
+});
+canvas.addEventListener('mousemove', e => {
+    if (state.isDragging) handleInput(e.clientX);
+});
+canvas.addEventListener('mouseup', () => {
+    state.isDragging = false;
+});
+canvas.addEventListener('mouseleave', () => {
+    state.isDragging = false;
+});
+
+canvas.addEventListener('touchstart', e => {
+    e.preventDefault();
+    state.isDragging = true;
+    handleInput(e.touches[0].clientX);
+}, { passive: false });
+canvas.addEventListener('touchmove', e => {
+    e.preventDefault();
+    if (state.isDragging) handleInput(e.touches[0].clientX);
+}, { passive: false });
+canvas.addEventListener('touchend', () => {
+    state.isDragging = false;
+});
 
 function drawPot(x, y, w, h) {
     ctx.save();
@@ -472,8 +498,12 @@ function drawPot(x, y, w, h) {
     // Velocity is mostly difference between frames. 
     // If moving fast, stretch width (scaleX > 1), squash height (scaleY < 1).
     const stretchFactor = Math.min(Math.abs(state.playerVelocity) * 0.005, 0.3);
-    const scaleX = 1 + stretchFactor;
-    const scaleY = 1 - stretchFactor;
+    
+    // Touch Interaction Scale (1.1x when dragging/touching)
+    const interactionScale = state.isDragging ? 1.1 : 1.0;
+
+    const scaleX = (1 + stretchFactor) * interactionScale;
+    const scaleY = (1 - stretchFactor) * interactionScale;
     
     // Pivot around bottom center
     const centerX = x + w/2;
@@ -559,7 +589,8 @@ function startGame(difficulty) {
         levelUpPause: false,
         lemonSpawnedForLevel: false,
         timeFreeze: 0, // Timer for slow motion
-        originalSpeed: 0 // Store speed before slow motion
+        originalSpeed: 0, // Store speed before slow motion
+        isDragging: false // Reset drag state
     };
 
     startScreen.classList.add('hidden');
