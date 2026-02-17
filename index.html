@@ -19,8 +19,13 @@
 
     <!-- HUD -->
     <div id="hud" class="absolute top-0 left-0 w-full p-4 z-10 hidden flex justify-between items-start pointer-events-none">
-        <div class="bg-orange-100/90 backdrop-blur-sm rounded-lg px-3 py-1 shadow-lg border-2 border-orange-600 pointer-events-auto cursor-pointer hover:scale-105 transition-transform">
-            <span class="text-2xl drop-shadow-sm">❤️</span> <span id="livesDisplay" class="font-bold text-xl text-red-700 drop-shadow-sm">3</span>
+        <div class="flex flex-col gap-2 pointer-events-auto">
+             <button id="backToMenuBtn" class="bg-gray-700/90 text-white rounded-full w-10 h-10 flex items-center justify-center border-2 border-gray-500 hover:bg-gray-600 transition-colors shadow-lg">
+                ⬅️
+            </button>
+            <div class="bg-orange-100/90 backdrop-blur-sm rounded-lg px-3 py-1 shadow-lg border-2 border-orange-600 cursor-pointer hover:scale-105 transition-transform">
+                <span class="text-2xl drop-shadow-sm">❤️</span> <span id="livesDisplay" class="font-bold text-xl text-red-700 drop-shadow-sm">3</span>
+            </div>
         </div>
         
         <div class="flex flex-col items-center pointer-events-auto cursor-pointer hover:scale-105 transition-transform">
@@ -93,13 +98,21 @@
             
             <h3 class="font-game text-3xl text-orange-800 text-center mb-4 drop-shadow-sm">CÓMO JUGAR</h3>
             
-            <div class="space-y-4">
+            <div class="space-y-4 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+                <div class="bg-white/60 p-3 rounded-lg shadow-inner border border-yellow-400">
+                     <div class="flex justify-center mb-1">
+                        <span class="text-3xl filter drop-shadow-sm">🥘</span>
+                    </div>
+                    <p class="text-center font-bold text-yellow-700 text-sm uppercase">¡Zarangollo Supremo!</p>
+                     <p class="text-center text-xs text-gray-600 font-bold">(+50 pts + Combo)</p>
+                </div>
+
                 <div class="bg-white/60 p-3 rounded-lg shadow-inner border border-orange-200">
-                    <div class="flex justify-center space-x-2 mb-1 text-3xl filter drop-shadow-sm">
-                        <span>🎃</span><span>🍐</span><span>🌿</span><span>🧆</span><span>🌶️</span>
+                    <div class="flex justify-center flex-wrap gap-1 mb-1 text-2xl filter drop-shadow-sm">
+                         <span>🎃</span><span>🍐</span><span>🌿</span><span>🧆</span><span>🌶️</span><span>🍅</span><span>🌽</span>
                     </div>
                     <p class="text-center font-bold text-gray-800 text-sm uppercase">Pilla lo bueno (+10 pts)</p>
-                    <p class="text-center text-xs text-gray-600 italic">Zarangollo, michirones, paparajotes...</p>
+                    <p class="text-center text-xs text-gray-600 italic">Verduras de la huerta, michirones...</p>
                 </div>
 
                 <div class="bg-white/60 p-3 rounded-lg shadow-inner border border-red-200">
@@ -110,8 +123,8 @@
                 </div>
 
                 <div class="bg-white/60 p-3 rounded-lg shadow-inner border border-gray-200">
-                    <div class="flex justify-center space-x-2 mb-1 text-3xl grayscale opacity-80">
-                        <span>💊</span><span>💉</span><span>🚬</span><span>💀</span>
+                    <div class="flex justify-center flex-wrap gap-1 mb-1 text-2xl grayscale opacity-80">
+                        <span>💊</span><span>💉</span><span>🚬</span><span>💀</span><span>💩</span><span>🦟</span>
                     </div>
                     <p class="text-center font-bold text-red-800 text-sm uppercase">¡Ni toques la mierda!</p>
                     <p class="text-center text-xs text-red-600 font-bold">(-1 vida)</p>
@@ -131,6 +144,33 @@
             SEGUIR
         </button>
         <p class="text-white/70 text-sm mt-4">Toca la pantalla pa' volver</p>
+    </div>
+
+    <!-- Victory Screen -->
+    <div id="victoryScreen" class="hidden absolute inset-0 z-30 flex flex-col items-center justify-center bg-gray-900/95 backdrop-blur-md p-6 text-center text-white bg-cover bg-center" style="background-image: url('victory.jpg');">
+        <!-- Overlay for readability -->
+        <div class="absolute inset-0 bg-black/50 z-0"></div>
+        
+        <div class="relative z-10 w-full flex flex-col items-center">
+            <h1 class="font-game text-6xl md:text-8xl text-yellow-400 drop-shadow-[0_6px_0_rgba(180,83,9,1)] mb-4 animate-bounce">¡ACHO QUÉ MÁQUINA!</h1>
+            
+            <div class="bg-gray-800/80 p-6 rounded-xl border-4 border-yellow-500 w-full max-w-sm mb-6 backdrop-blur-sm">
+                <p class="text-gray-300 text-sm uppercase tracking-widest mb-1">Puntuación Final</p>
+                <p id="finalScoreVictory" class="font-game text-7xl text-yellow-400 mb-4 drop-shadow-lg">0</p>
+                
+                <div class="space-y-3">
+                    <input type="text" id="playerNameVictory" placeholder="Tu mote" maxlength="40" class="w-full bg-gray-700/80 text-white text-center text-2xl font-mono p-3 rounded border-2 border-gray-500 focus:border-yellow-400 focus:outline-none transition-colors placeholder-gray-400">
+                    <button id="submitScoreBtnVictory" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded shadow-lg transition-colors text-sm uppercase tracking-wide border-2 border-green-400">
+                        Guardar en el Ranking
+                    </button>
+                    <div id="submitMsgVictory" class="text-xs h-4 text-green-400 font-bold"></div>
+                </div>
+            </div>
+
+            <button id="restartBtnVictory" class="bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-game text-2xl py-3 px-8 rounded-full shadow-[0_4px_0_rgb(161,98,7)] active:shadow-[0_1px_0_rgb(161,98,7)] active:translate-y-1 transition-all border-4 border-yellow-700 uppercase">
+                Otra Ronda 🍺
+            </button>
+        </div>
     </div>
 
     <!-- Game Over Screen -->

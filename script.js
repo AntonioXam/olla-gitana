@@ -17,11 +17,11 @@ const CONFIG = {
     MAX_LEVELS: 20,
     
     DIFFICULTY: {
-        easy: { speed: 2, accel: 0.3, prefix: '[E]', label: 'FÁCIL 🐢', 
+        easy: { speed: 1.5, accel: 0.2, prefix: '[E]', label: 'FÁCIL 🐢', 
             classes: 'from-green-400 to-green-600 shadow-[0_6px_0_#15803d] active:shadow-[0_2px_0_#15803d]' },
         normal: { speed: 3, accel: 0.5, prefix: '[N]', label: 'NORMAL 🥘', 
             classes: 'from-blue-400 to-blue-600 shadow-[0_6px_0_#1d4ed8] active:shadow-[0_2px_0_#1d4ed8]' },
-        hard: { speed: 5, accel: 0.8, prefix: '[H]', label: 'DIFÍCIL 🔥', 
+        hard: { speed: 5.5, accel: 0.8, prefix: '[H]', label: 'DIFÍCIL 🔥', 
             classes: 'from-red-400 to-red-600 shadow-[0_6px_0_#b91c1c] active:shadow-[0_2px_0_#b91c1c]' }
     }
 };
@@ -385,13 +385,18 @@ const startScreen = document.getElementById('startScreen');
 const gameOverScreen = document.getElementById('gameOverScreen');
 const pauseScreen = document.getElementById('pauseScreen');
 const rankingScreen = document.getElementById('rankingScreen');
+const victoryScreen = document.getElementById('victoryScreen'); // New
 const levelUpMsg = document.getElementById('levelUpMsg');
 const newLevelNum = document.getElementById('newLevelNum');
 const finalScoreDisplay = document.getElementById('finalScore');
+const finalScoreVictoryDisplay = document.getElementById('finalScoreVictory'); // New
 const leaderboardBody = document.getElementById('leaderboardBody');
 const fullLeaderboardBody = document.getElementById('fullLeaderboardBody');
 const submitScoreBtn = document.getElementById('submitScoreBtn');
+const submitScoreBtnVictory = document.getElementById('submitScoreBtnVictory'); // New
 const playerNameInput = document.getElementById('playerName');
+const playerNameInputVictory = document.getElementById('playerNameVictory'); // New
+const backToMenuBtn = document.getElementById('backToMenuBtn'); // New
 const instructionsModal = document.getElementById('instructionsModal');
 const difficultyToggle = document.getElementById('difficultyToggle');
 
@@ -744,24 +749,22 @@ function checkLevelUp() {
 function victory() {
     state.isRunning = false;
     hud.classList.add('hidden');
-    gameOverScreen.classList.remove('hidden');
-    setBackground('gameover');
+    victoryScreen.classList.remove('hidden');
     
-    // Victory Text
-    const victoryTitle = gameOverScreen.querySelector('h1');
-    victoryTitle.innerText = "¡ERES EL REY DE LA HUERTA!";
-    victoryTitle.className = "text-5xl md:text-7xl font-black text-yellow-400 drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)] animate-pulse";
+    // Play special victory audio
+    if (AudioEngine.levelUpSpecialElement) {
+        AudioEngine.levelUpSpecialElement.currentTime = 0;
+        AudioEngine.levelUpSpecialElement.play().catch(console.warn);
+    }
     
-    finalScoreDisplay.innerText = state.score;
+    finalScoreVictoryDisplay.innerText = state.score;
     
-    submitScoreBtn.disabled = false;
-    submitScoreBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-    document.getElementById('submitMsg').innerText = "";
-    
-    loadLeaderboard(state.difficulty, leaderboardBody, 5);
+    submitScoreBtnVictory.disabled = false;
+    submitScoreBtnVictory.classList.remove('opacity-50', 'cursor-not-allowed');
+    document.getElementById('submitMsgVictory').innerText = "";
     
     // Massive Confetti
-    for(let i=0; i<5; i++) {
+    for(let i=0; i<10; i++) {
         setTimeout(() => {
             VFX.spawnConfetti(Math.random() * CONFIG.GAME_WIDTH, Math.random() * CONFIG.GAME_HEIGHT);
         }, i * 200);
@@ -1173,6 +1176,30 @@ submitScoreBtn.addEventListener('click', () => {
             submitScoreBtn.classList.add('opacity-50', 'cursor-not-allowed');
         });
     }
+});
+
+submitScoreBtnVictory.addEventListener('click', () => {
+    const val = playerNameInputVictory.value.trim();
+    if (val) {
+        saveScore(val, state.score).then(() => {
+            document.getElementById('submitMsgVictory').innerText = "¡Guardado!";
+            submitScoreBtnVictory.disabled = true;
+            submitScoreBtnVictory.classList.add('opacity-50', 'cursor-not-allowed');
+        });
+    }
+});
+
+document.getElementById('restartBtnVictory').addEventListener('click', () => {
+    victoryScreen.classList.add('hidden');
+    startGame(state.difficulty);
+});
+
+backToMenuBtn.addEventListener('click', () => {
+    state.isRunning = false;
+    hud.classList.add('hidden');
+    pauseScreen.classList.add('hidden');
+    startScreen.classList.remove('hidden');
+    setBackground('start');
 });
 
 // Prevent Context Menu
